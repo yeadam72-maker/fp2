@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>지문 로그인</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,"Malgun Gothic",sans-serif;background:#0f172a;color:#e2e8f0}
+    .wrap{max-width:720px;margin:0 auto;padding:20px}
+    .hidden{display:none}
+    #gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .gate-card{background:linear-gradient(135deg,#1e293b,#0b1220);border:1px solid #334155;border-radius:24px;padding:48px 32px;text-align:center;max-width:420px;width:100%;position:relative}
+    .ver{position:absolute;top:12px;right:16px;font-size:11px;color:#475569}
+    .gate-card .ico{font-size:56px}
+    .gate-card h1{font-size:22px;margin:14px 0 6px}
+    .gate-card p{color:#94a3b8;font-size:14px;margin:0 0 24px}
+    .big{width:100%;padding:16px;border:0;border-radius:12px;font-size:17px;font-weight:800;color:#fff;background:#3b82f6;cursor:pointer}
+    .gstatus{margin-top:16px;color:#cbd5e1;font-size:14px;min-height:20px}
+    .cancel{margin-top:10px;background:#475569}
+    .welcome{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:radial-gradient(circle at 50% 30%,#052e16,#0f172a);animation:fadein .45s ease}
+    @keyframes fadein{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+    .welcome .check{font-size:70px}
+    .welcome .who{font-size:38px;font-weight:800;color:#4ade80;margin:14px 0 6px}
+    .welcome .when{color:#94a3b8;font-size:14px;margin-bottom:26px}
+    .welcome .hint{color:#64748b;font-size:13px;margin-top:26px}
+    .card{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:16px;margin-bottom:16px}
+    h2{font-size:15px;margin:0 0 12px;color:#cbd5e1}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:8px 6px;text-align:left;border-bottom:1px solid #334155}
+    th{color:#94a3b8;font-weight:600}
+    input{background:#0f172a;color:#e2e8f0;padding:9px;border:1px solid #475569;border-radius:8px;font-size:14px}
+    button{padding:9px 14px;border:0;border-radius:8px;font-weight:700;color:#fff;cursor:pointer;font-size:14px}
+    .btn{background:#3b82f6}.btn-red{background:#ef4444}.btn-gray{background:#475569}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .muted{color:#94a3b8;font-size:13px}
+    .badge{padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .b-in{background:#14532d;color:#86efac}.b-no{background:#3f1d1d;color:#fca5a5}
+  </style>
+</head>
+<body>
+  <div id="gate">
+    <div class="gate-card">
+      <div class="ver">ver 4</div>
+      <div class="ico">🔒</div>
+      <h1>지문으로 로그인</h1>
+      <p>버튼을 누른 뒤 센서에 손가락을 올리세요</p>
+      <button class="big" id="btn-fp">지문으로 로그인</button>
+      <button class="big cancel hidden" id="btn-cancel">취소</button>
+      <div class="gstatus" id="gstatus"></div>
+    </div>
+  </div>
+
+  <div id="app" class="hidden">
+    <section class="welcome">
+      <div class="check">✅</div>
+      <div class="who" id="wc-who">환영합니다</div>
+      <div class="when" id="wc-when"></div>
+      <button class="btn-gray" id="btn-logout">로그아웃</button>
+      <div class="hint">↓ 아래로 스크롤하면 기록·관리 화면</div>
+    </section>
+
+    <div class="wrap">
+      <div class="card">
+        <h2>📜 최근 로그인 기록</h2>
+        <table><thead><tr><th>시간</th><th>이름</th><th>ID</th><th>상태</th><th>일치도</th></tr></thead>
+          <tbody id="log"><tr><td colspan="5" class="muted">불러오는 중…</td></tr></tbody></table>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 style="margin:0">🔐 관리자</h2><span id="admin-who" class="muted"></span>
+        </div>
+        <div id="login-box" class="row" style="margin-top:10px">
+          <input id="email" type="email" placeholder="관리자 이메일" style="flex:1;min-width:160px">
+          <input id="pw" type="password" placeholder="비밀번호" style="flex:1;min-width:120px">
+          <button class="btn" id="btn-login">로그인</button>
+        </div>
+        <div id="admin-box" class="hidden" style="margin-top:14px">
+          <div class="row">
+            <input id="uid" type="number" min="1" placeholder="지문 ID" style="width:100px">
+            <input id="uname" placeholder="이름" style="flex:1;min-width:120px">
+            <button class="btn" id="btn-add">사용자 등록</button>
+            <button class="btn-gray" id="btn-adlogout">관리자 로그아웃</button>
+          </div>
+          <table style="margin-top:12px"><thead><tr><th>ID</th><th>이름</th><th></th></tr></thead>
+            <tbody id="users"></tbody></table>
+        </div>
+        <div id="msg" class="muted" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set, remove, query, limitToLast }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    console.log("✅ 지문 로그인 페이지 ver4 로드됨");
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBiRXIW8eExZQIqaU3vYxZe13PgEWYmMnE",
+      authDomain: "csy123-92048.firebaseapp.com",
+      databaseURL: "https://csy123-92048-default-rtdb.firebaseio.com",
+      projectId: "csy123-92048",
+      storageBucket: "csy123-92048.firebasestorage.app",
+      messagingSenderId: "865131587129",
+      appId: "1:865131587129:web:09638ee33314690f8d4fe8",
+      measurementId: "G-G17025F4L8"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+    const $ = (id) => document.getElementById(id);
+
+    let serverOffset = 0;
+    onValue(ref(db, ".info/serverTimeOffset"), (s) => { serverOffset = s.val() || 0; });
+    const serverNow = () => Date.now() + serverOffset;
+
+    let usersMap = {};
+    onValue(ref(db, "users"), (snap) => { usersMap = snap.val() || {}; renderUsers(); });
+
+    // ── 지문 로그인 게이트 ──
+    let gateUnsub = null, gateAt = 0, timer = null;
+    $("btn-fp").onclick = startLogin;
+    $("btn-cancel").onclick = cancelLogin;
+    $("btn-logout").onclick = logout;
+
+    function startLogin() {
+      gateAt = serverNow() - 1500;
+      console.log("🟦 로그인 대기 시작, gateAt =", gateAt);
+      gstatus("👉 센서에 손가락을 올려주세요…");
+      $("btn-fp").classList.add("hidden"); $("btn-cancel").classList.remove("hidden");
+      gateUnsub = onValue(ref(db, "session/current"), (snap) => {
+        const v = snap.val();
+        console.log("🔎 session/current =", v);
+        if (v && v.fingerId != null && typeof v.at === "number" && v.at >= gateAt) {
+          console.log("🎉 로그인 인정! fingerId =", v.fingerId);
+          const fid = v.fingerId; cleanup(); loginWith(fid);
+        }
+      });
+      timer = setTimeout(() => { cleanup(); gstatus("⏱ 시간 초과. 다시 시도하세요."); resetBtns(); }, 60000);
+    }
+    function cancelLogin(){ cleanup(); gstatus(""); resetBtns(); }
+    function cleanup(){ if(gateUnsub){gateUnsub();gateUnsub=null;} if(timer){clearTimeout(timer);timer=null;} }
+    function resetBtns(){ $("btn-fp").classList.remove("hidden"); $("btn-cancel").classList.add("hidden"); }
+
+    // 로그인 상태는 메모리에만 유지 -> 새로고침하면 다시 잠금화면부터
+    function loginWith(fid){
+      const name = (usersMap[fid] && usersMap[fid].name) || ("ID " + fid);
+      $("gate").classList.add("hidden");
+      $("app").classList.remove("hidden");
+      window.scrollTo(0, 0);
+      $("wc-who").textContent = "환영합니다, " + name + "님";
+      $("wc-when").textContent = "로그인 시간: " + new Date().toLocaleString("ko-KR");
+    }
+    function logout(){
+      $("app").classList.add("hidden");
+      $("gate").classList.remove("hidden");
+      resetBtns(); gstatus("");
+    }
+
+    // 접속 시 항상 잠금 화면부터 (이전 로그인 자동복원 없음)
+    logout();
+
+    // ── 로그 ──
+    onValue(query(ref(db, "events"), limitToLast(20)), (snap) => {
+      const rows=[]; snap.forEach(c=>rows.push(c.val())); rows.reverse();
+      const nm=(fid)=>(usersMap[fid]&&usersMap[fid].name)||"-";
+      $("log").innerHTML = rows.length ? rows.map(e=>
+        `<tr><td>${fmt(e.at)}</td><td>${esc(nm(e.fingerId))}</td><td>${e.fingerId}</td>
+         <td><span class="badge ${e.action==='login'?'b-in':'b-no'}">${e.action==='login'?'로그인':'거부'}</span></td>
+         <td>${e.confidence ?? "-"}</td></tr>`).join("") : `<tr><td colspan="5" class="muted">기록 없음</td></tr>`;
+    });
+
+    // ── 관리자 ──
+    $("btn-login").onclick = () => signInWithEmailAndPassword(auth, $("email").value, $("pw").value).catch(e=>msg("로그인 실패: "+e.code));
+    $("btn-adlogout").onclick = () => signOut(auth);
+    onAuthStateChanged(auth, (user) => {
+      const on=!!user;
+      $("login-box").classList.toggle("hidden", on);
+      $("admin-box").classList.toggle("hidden", !on);
+      $("admin-who").textContent = on ? user.email : ""; msg(""); renderUsers();
+    });
+    $("btn-add").onclick = () => {
+      const id=$("uid").value, nm=$("uname").value.trim();
+      if(!id||!nm){ msg("지문 ID와 이름을 입력하세요"); return; }
+      set(ref(db,"users/"+id),{name:nm,createdAt:Date.now()})
+        .then(()=>{ msg("등록됨: "+id+" → "+nm); $("uid").value=""; $("uname").value=""; })
+        .catch(e=>msg("등록 실패: "+e.code));
+    };
+    function renderUsers(){
+      const admin=!!auth.currentUser;
+      const ids=Object.keys(usersMap).sort((a,b)=>a-b);
+      const tb=$("users"); if(!tb) return;
+      tb.innerHTML = ids.length ? ids.map(id=>
+        `<tr><td>${id}</td><td>${esc(usersMap[id].name)}</td>
+         <td>${admin?`<button class="btn-red" data-del="${id}">삭제</button>`:""}</td></tr>`).join("")
+        : `<tr><td colspan="3" class="muted">등록된 사용자 없음</td></tr>`;
+      document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>remove(ref(db,"users/"+b.dataset.del)).catch(e=>msg("삭제 실패: "+e.code)));
+    }
+    function fmt(ts){ return ts?new Date(ts).toLocaleString("ko-KR"):"-"; }
+    function esc(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+    function msg(t){ const m=$("msg"); if(m) m.textContent=t; }
+    function gstatus(t){ const e=$("gstatus"); if(e) e.textContent=t; }
+  </script>
+</body>
+</html>
